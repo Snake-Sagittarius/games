@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ゲーム効果音 サンプル集 (Web Audio API)</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent-color: #38bdf8;
+      --accent-hover: #0284c7;
+      --success-color: #22c55e;
+      --success-hover: #16a34a;
+      --danger-color: #ef4444;
+      --danger-hover: #dc2626;
+      --text-color: #f8fafc;
+      --sub-text: #94a3b8;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin-bottom: 0.5rem;
+      color: var(--accent-color);
+      font-size: 1.8rem;
+      text-align: center;
+    }
+
+    p.description {
+      color: var(--sub-text);
+      margin-bottom: 2rem;
+      text-align: center;
+      max-width: 600px;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.2rem;
+      width: 100%;
+      max-width: 960px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid #334155;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      transition: transform 0.1s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .card h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card p {
+      font-size: 0.85rem;
+      color: var(--sub-text);
+      margin: 0 0 1rem 0;
+      line-height: 1.4;
+    }
+
+    button {
+      background-color: var(--accent-color);
+      color: #0f172a;
+      border: none;
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background-color: var(--accent-hover);
+      color: #ffffff;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    button.active {
+      background-color: var(--danger-color);
+      color: #ffffff;
+      animation: pulse 1s infinite alternate;
+    }
+
+    button.success-btn {
+      background-color: var(--success-color);
+      color: white;
+    }
+    button.success-btn:hover {
+      background-color: var(--success-hover);
+    }
+
+    button.danger-btn {
+      background-color: var(--danger-color);
+      color: white;
+    }
+    button.danger-btn:hover {
+      background-color: var(--danger-hover);
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.8; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🚀 SFX Sound Generator</h1>
+  <p class="description">Web Audio APIを活用したゲーム効果音サンプル集です。外部音源ファイル無しで高精度な効果音を生成します。</p>
+
+  <div class="grid-container">
+
+    <!-- 1. 単発射撃音 -->
+    <div class="card">
+      <div>
+        <h3>🔫 単発の射撃音</h3>
+        <p>短時間でピッチを急降下させる矩形波。アーケードライクなショット音です。</p>
+      </div>
+      <button onclick="playShot()">再生 (Shot)</button>
+    </div>
+
+    <!-- 2. レーザー照射音 -->
+    <div class="card">
+      <div>
+        <h3>⚡ レーザー照射中の音</h3>
+        <p>LFOで周波数を微振動させた継続音。クリックでON/OFFを切り替えます。</p>
+      </div>
+      <button id="laserBtn" onclick="toggleLaser()">照射開始 (Laser ON)</button>
+    </div>
+
+    <!-- 3. 敵破壊音 (軽) -->
+    <div class="card">
+      <div>
+        <h3>💥 敵の破壊音（軽い音）</h3>
+        <p>雑魚敵用の短い爆発音。ノイズに高域カットオフを組み合わせた破裂音です。</p>
+      </div>
+      <button onclick="playDestroyLight()">再生 (Destroy Light)</button>
+    </div>
+
+    <!-- 4. 敵破壊音 (重) -->
+    <div class="card">
+      <div>
+        <h3>💣 敵の破壊音（重い音）</h3>
+        <p>中ボスや大型敵用。低音オシレーターとノイズを合わせた重厚な爆発音。</p>
+      </div>
+      <button onclick="playDestroyHeavy()">再生 (Destroy Heavy)</button>
+    </div>
+
+    <!-- 5. 弾の跳ね返し音 (改良版: 金属音) -->
+    <div class="card">
+      <div>
+        <h3>🛡️ 弾の跳ね返し音（キンッ！）</h3>
+        <p>非調和倍音の超高音と短いノイズアタックを合わせた高い金属音です。</p>
+      </div>
+      <button onclick="playReflectMetallic()">再生 (Metal Reflect)</button>
+    </div>
+
+    <!-- 6. クイズ正解音 (新規追加) -->
+    <div class="card">
+      <div>
+        <h3>⭕ クイズ正解音（ピンポン！）</h3>
+        <p>澄んだサイン波の「ソ → ド」2音構成。余韻を残したクリア音です。</p>
+      </div>
+      <button class="success-btn" onclick="playQuizCorrect()">再生 (Correct)</button>
+    </div>
+
+    <!-- 7. クイズ不正解音 (新規追加) -->
+    <div class="card">
+      <div>
+        <h3>❌ クイズ不正解音（ブッブー！）</h3>
+        <p>鋸歯状波の不協和音による歯切れの良い「ブッ・ブー」音です。</p>
+      </div>
+      <button class="danger-btn" onclick="playQuizWrong()">再生 (Wrong)</button>
+    </div>
+
+    <!-- 8. 自機破壊音 -->
+    <div class="card">
+      <div>
+        <h3>⚠️ 自機の破壊音</h3>
+        <p>衝撃波ノイズと時間差の下降音を合わせたドラマチックな被撃墜音です。</p>
+      </div>
+      <button class="danger-btn" onclick="playPlayerDestroy()">再生 (Player Destroy)</button>
+    </div>
+
+    <!-- 9. ボムの破壊音 -->
+    <div class="card">
+      <div>
+        <h3>🌟 範囲攻撃ボムの音</h3>
+        <p>低音の鳴り響きとフィルターの開閉による全体攻撃・画面清掃ボム音。</p>
+      </div>
+      <button onclick="playBomb()">再生 (Bomb Explosion)</button>
+    </div>
+
+    <!-- 10. アイテム取得音 -->
+    <div class="card">
+      <div>
+        <h3>💎 アイテム取得音</h3>
+        <p>高速アルペジオによるキャッチーで心地よいアップテンポ音。</p>
+      </div>
+      <button onclick="playItem()">再生 (Item Pick)</button>
+    </div>
+
+    <!-- 11. ゲームクリア音 -->
+    <div class="card">
+      <div>
+        <h3>🏆 ゲームクリア音</h3>
+        <p>短いファンファーレ（ジングル）。ステージ消去や勝利時に使用できます。</p>
+      </div>
+      <button onclick="playGameClear()">再生 (Game Clear)</button>
+    </div>
+
+  </div>
+
+  <script>
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function createNoiseBuffer(ctx, duration) {
+      const bufferSize = ctx.sampleRate * duration;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      return buffer;
+    }
+
+    // 1. 単発の射撃音
+    function playShot() {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.08);
+
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.08);
+    }
+
+    // 2. レーザー照射中の音
+    let laserNodes = null;
+    function toggleLaser() {
+      const btn = document.getElementById('laserBtn');
+      if (laserNodes) {
+        laserNodes.gain.gain.linearRampToValueAtTime(0.01, laserNodes.ctx.currentTime + 0.1);
+        setTimeout(() => {
+          if (laserNodes) {
+            laserNodes.osc.stop();
+            laserNodes.lfo.stop();
+            laserNodes = null;
+          }
+        }, 100);
+        btn.textContent = "照射開始 (Laser ON)";
+        btn.classList.remove('active');
+      } else {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        const gain = ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(440, ctx.currentTime);
+
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(30, ctx.currentTime);
+        lfoGain.gain.setValueAtTime(40, ctx.currentTime);
+
+        lfo.connect(osc.frequency);
+
+        gain.gain.setValueAtTime(0.01, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        lfo.start();
+
+        laserNodes = { ctx, osc, lfo, gain };
+        btn.textContent = "照射停止 (Laser OFF)";
+        btn.classList.add('active');
+      }
+    }
+
+    // 3. 敵の破壊音（軽い音）
+    function playDestroyLight() {
+      const ctx = getAudioContext();
+      const noise = ctx.createBufferSource();
+      noise.buffer = createNoiseBuffer(ctx, 0.15);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1200, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.15);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      noise.start();
+    }
+
+    // 4. 敵の破壊音（重い音）
+    function playDestroyHeavy() {
+      const ctx = getAudioContext();
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = createNoiseBuffer(ctx, 0.6);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(800, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.6);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.5, ctx.currentTime);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+
+      const subOsc = ctx.createOscillator();
+      const subGain = ctx.createGain();
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(150, ctx.currentTime);
+      subOsc.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 0.5);
+
+      subGain.gain.setValueAtTime(0.4, ctx.currentTime);
+      subGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+      subOsc.connect(subGain);
+      subGain.connect(ctx.destination);
+
+      noise.start();
+      subOsc.start();
+      subOsc.stop(ctx.currentTime + 0.6);
+    }
+
+    // ----------------------------------------------------
+    // 5. 【改良】弾の跳ね返し音（金属音「キンッ！」）
+    // ----------------------------------------------------
+    function playReflectMetallic() {
+      const ctx = getAudioContext();
+
+      // 金属の非調和倍音（整数倍ではない高音周波数）の組み合わせ
+      const freqs = [2450, 3620, 4810, 6250];
+
+      freqs.forEach((freq, index) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+        // 超高速なアタックと鋭い減衰（金属の「キン」という硬い鳴り）
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.12 / (index + 1), ctx.currentTime + 0.002);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.12);
+      });
+
+      // 打撃の金属的な衝撃音（極短ノイズ）
+      const noise = ctx.createBufferSource();
+      noise.buffer = createNoiseBuffer(ctx, 0.015);
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.25, ctx.currentTime);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.015);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(3000, ctx.currentTime);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+
+      noise.start();
+    }
+
+    // ----------------------------------------------------
+    // 6. 【新規】クイズ正解音（ピンポン！）
+    // ----------------------------------------------------
+    function playQuizCorrect() {
+      const ctx = getAudioContext();
+
+      // 「ピン」(G5 - 783.99Hz) と 「ポン」(C6 - 1046.50Hz)
+      const notes = [
+        { freq: 783.99, time: 0, duration: 0.35, vol: 0.25 },
+        { freq: 1046.50, time: 0.15, duration: 0.65, vol: 0.30 }
+      ];
+
+      notes.forEach(note => {
+        const startTime = ctx.currentTime + note.time;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine'; // 澄んだベルのような音色
+        osc.frequency.setValueAtTime(note.freq, startTime);
+
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(note.vol, startTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + note.duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + note.duration);
+      });
+    }
+
+    // ----------------------------------------------------
+    // 7. 【新規】クイズ不正解音（ブッブー！）
+    // ----------------------------------------------------
+    function playQuizWrong() {
+      const ctx = getAudioContext();
+
+      // 「ブッ」(短音) と 「ブー」(長音) のタイミング
+      const phrases = [
+        { start: 0.0, duration: 0.12 },
+        { start: 0.18, duration: 0.45 }
+      ];
+
+      phrases.forEach(phrase => {
+        const startTime = ctx.currentTime + phrase.start;
+
+        // 不協和音を作る2つの低音（138.59Hz = C#3, 146.83Hz = D3）
+        [138.59, 146.83].forEach(freq => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'sawtooth'; // ブザーのようなザラザラした音色
+          osc.frequency.setValueAtTime(freq, startTime);
+
+          gain.gain.setValueAtTime(0.18, startTime);
+          gain.gain.linearRampToValueAtTime(0.18, startTime + phrase.duration - 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, startTime + phrase.duration);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(startTime);
+          osc.stop(startTime + phrase.duration);
+        });
+      });
+    }
+
+    // 8. 自機の破壊音
+    function playPlayerDestroy() {
+      const ctx = getAudioContext();
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = createNoiseBuffer(ctx, 1.2);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2000, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 1.0);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.6, ctx.currentTime);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(300, ctx.currentTime + 0.05);
+      osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.9);
+
+      oscGain.gain.setValueAtTime(0.3, ctx.currentTime + 0.05);
+      oscGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.9);
+
+      osc.connect(oscGain);
+      oscGain.connect(ctx.destination);
+
+      noise.start();
+      osc.start(ctx.currentTime + 0.05);
+      osc.stop(ctx.currentTime + 1.2);
+    }
+
+    // 9. 範囲攻撃ボムの破壊音
+    function playBomb() {
+      const ctx = getAudioContext();
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = createNoiseBuffer(ctx, 2.2);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(100, ctx.currentTime);
+      filter.frequency.linearRampToValueAtTime(3000, ctx.currentTime + 0.3);
+      filter.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 2.2);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2.2);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      const sub = ctx.createOscillator();
+      const subGain = ctx.createGain();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(80, ctx.currentTime);
+      sub.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 2.0);
+
+      subGain.gain.setValueAtTime(0.5, ctx.currentTime);
+      subGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2.0);
+
+      sub.connect(subGain);
+      subGain.connect(ctx.destination);
+
+      noise.start();
+      sub.start();
+      sub.stop(ctx.currentTime + 2.2);
+    }
+
+    // 10. アイテム取得音
+    function playItem() {
+      const ctx = getAudioContext();
+      const notes = [659.25, 830.61, 987.77, 1318.51];
+      
+      notes.forEach((freq, index) => {
+        const startTime = ctx.currentTime + index * 0.04;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+
+        gain.gain.setValueAtTime(0.2, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.12);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + 0.12);
+      });
+    }
+
+    // 11. ゲームクリア音
+    function playGameClear() {
+      const ctx = getAudioContext();
+      const sequence = [
+        { note: 523.25, start: 0.00, duration: 0.10 },
+        { note: 659.25, start: 0.12, duration: 0.10 },
+        { note: 783.99, start: 0.24, duration: 0.10 },
+        { note: 1046.50, start: 0.36, duration: 0.30 },
+        { note: 880.00, start: 0.70, duration: 0.10 },
+        { note: 1046.50, start: 0.82, duration: 0.40 }
+      ];
+
+      sequence.forEach(item => {
+        const startTime = ctx.currentTime + item.start;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(item.note, startTime);
+
+        gain.gain.setValueAtTime(0.25, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + item.duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + item.duration);
+      });
+    }
+  </script>
+</body>
+</html>
