@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>英単語穴埋めシューティング</title>
+  <style>
+    div, p {
+      text-align: center;
+    }
+    table {
+      margin: 0 auto;
+    }
+    td {
+      vertical-align: top;
+    }
+    textarea {
+      width: 200px;
+      height: 200px;
+    }
+    #canvas1 {
+      border: 2px solid gray;
+      background-image: url('starryNight.jpg');
+      background-size: cover;
+    }
+    button {
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div>
+  <h1>英単語穴埋めシューティング</h1>
+    <table>
+      <tr>
+        <td><canvas id="canvas1" width="800" height="600"></canvas></td>
+        <td>
+          <h3>正解リスト</h3>
+          <textarea id="correct"></textarea>
+          <h3>失敗リスト</h3>
+          <textarea id="miss"></textarea>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <button onclick="stop()">中断</button>
+          <button onclick="start()">再開</button>
+          <button onclick="disp()">単語データベース表示切替</button>
+        </td>
+      </tr>
+    </table>  
+  </div>
+  <p><textarea id="wordlist"></textarea></p>
+  <script>
+    //英単語リスト初期設定
+    const wordlist = document.getElementById("wordlist");
+    wordlist.style.display = "none";
+    wordlist.value = `apple|ˈæpl,りんご
+baby|ˈbeɪbi,赤ちゃん
+back|bæk,後ろ、背中
+ball|bɔːl,ボール、球
+bank|bæŋk,銀行、土手
+base|beɪs,基礎、土台
+bear|beər,クマ、耐える
+bird|bɜːd,鳥
+blue|bluː,青い
+boat|bəʊt,ボート、小舟
+book|bʊk,本、予約する
+busy|ˈbɪzi,忙しい
+cake|keɪk,ケーキ
+call|kɔːl,呼ぶ、電話する
+card|kɑːd,カード、トランプ
+care|keər,世話、心配する
+city|ˈsɪti,都市、市
+cold|kəʊld,寒い、冷たい、風邪
+cook|kʊk,料理する、料理人
+cool|kuːl,涼しい、かっこいい
+dark|dɑːk,暗い
+date|deɪt,日付、デート
+desk|desk,机
+door|dɔːr,ドア、扉
+draw|drɔː,描く、引く
+easy|ˈiːzi,簡単な、容易な
+face|feɪs,顔、直面する
+fall|fɔːl,落ちる、秋
+farm|fɑːm,農場
+fast|fɑːst,早い、速く
+find|faɪnd,見つける
+fish|fɪʃ,魚、釣る
+food|fuːd,食べ物、食品
+free|friː,自由な、無料の
+game|ɡeɪm,ゲーム、試合
+girl|ɡɜːl,女の子
+give|ɡɪv,与える
+glad|ɡlæd,嬉しい
+gold|ɡəʊld,金、黄金
+good|ɡʊd,良い
+hand|hænd,手、手渡す
+hard|hɑːd,難しい、硬い、熱心に
+head|hed,頭、率いる
+hear|hɪər,聞こえる
+help|help,助ける、手伝う
+high|haɪ,高い
+hill|hɪl,丘、小山
+hold|həʊld,保持する、持つ
+home|həʊm,家、家庭
+hope|həʊp,希望する、望む
+hour|ˈaʊər,時間（1時間）
+house|haʊs,家、家屋
+idea|aɪˈdɪə,考え、アイデア
+join|dʒɔɪn,加わる、参加する
+keep|kiːp,保つ、続ける
+kind|kaɪnd,親切な、種類
+king|kɪŋ,王、国王
+know|nəʊ,知っている
+land|lænd,土地、陸地、着陸する
+late|leɪt,遅い、遅れて
+lead|liːd,導く、リードする
+leaf|liːf,葉
+life|laɪf,命、生活、人生
+light|laɪt,光、軽い、明るい
+line|laɪn,線、列
+lion|ˈlaɪən,ライオン
+look|lʊk,見る
+love|lʌv,愛、愛する
+make|meɪk,作る
+many|ˈmeni,多くの
+map|mæp,地図
+meet|miːt,会う
+mind|maɪnd,心、気にする
+moon|muːn,月
+more|mɔːr,もっと多くの
+name|neɪm,名前、名付ける
+near|nɪər,近い、近くに
+need|niːd,必要とする
+new|njuː,新しい
+nice|naɪs,素敵な、親切な
+night|naɪt,夜
+nose|nəʊz,鼻
+note|nəʊt,メモ、書き留める
+open|ˈəʊpən,開ける、開いている
+page|peɪdʒ,ページ
+park|pɑːk,公園、駐車する
+part|pɑːt,部分、役
+pass|pɑːs,通る、合格する、渡す
+pay|peɪ,支払う
+pen|pen,ペン
+plan|plæn,計画、計画する
+play|pleɪ,遊ぶ、演奏する、劇
+rain|reɪn,雨、雨が降る
+read|riːd,読む
+rich|rɪtʃ,豊かな、金持ちの
+ride|raɪd,乗る
+ring|rɪŋ,指輪、鳴る
+rise|raɪz,昇る、上がる
+road|rəʊd,道路、道
+rock|rɒk,岩、ロック音楽`;
+
+    const correctList = document.getElementById("correct");
+    const missList = document.getElementById("miss");
+    const canvas1 = document.getElementById("canvas1");
+    const ctx = canvas1.getContext("2d");
+    const canvasWidth = canvas1.width;
+    const canvasHeight = canvas1.height;
+
+    const player = { x: canvasWidth >> 1, y: canvasHeight - 50, width: 30, height: 30 };
+    let words = [];
+    let bullets = [];
+
+    class wordblock {
+      constructor(text, x, y){
+        let mt;
+        this.text = text;
+        if(text.length > 1){
+          //文字列内の「|」より前の部分を1文字ずつ分割
+          let char = [...text.split("|")[0]];
+
+          //1文字「□」で隠した問題と解答を作成
+          let i = Math.floor(Math.random() * char.length);
+          this.ans = char[i];
+          char[i] = "□";
+          this.quiz = char.join("");
+          mt = ctx.measureText(this.quiz);
+        }else{
+          mt = ctx.measureText(text);
+        }
+        
+        //位置情報の初期設定
+        this.width = mt.width;
+        this.left = x - Math.floor(this.width / 2);
+        this.baseline = y;                      //ベースラインとなるy座標
+        this.fbba = mt.fontBoundingBoxAscent;   //ベースラインから上端までの長さ
+        this.fbbd = mt.fontBoundingBoxDescent;  //ベースラインから下端までの長さ
+      }
+    }
+
+    let count = 20; //出題数
+    let stock = getWords(count);  //出題待ちのストック
+    let isGameOver = false;
+    let animationId;
+    let lastTime = performance.now(); //前回フレームの時間を記録
+    let spawnTimer = 0;      //ターゲットが次に出現するまでの時間（秒）
+    let spawnInterval = 2.0; //ターゲットが出現する間隔（2秒ごとに設定）
+
+    //初回のゲームループ呼び出し
+    animationId = requestAnimationFrame(gameLoop);
+
+    function gameLoop(timestamp) {
+      if (isGameOver) return; //中断中は処理しない
+
+      //前回のフレームからの経過時間(秒)を計算
+      const deltaTime = (timestamp - lastTime) / 1000;
+      lastTime = timestamp;
+
+      //画面をクリア
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      
+      //文字の色とサイズ設定
+      ctx.fillStyle = "white";
+      ctx.font = "30px monospace";
+
+      //ターゲット出現処理
+      spawnTimer -= deltaTime;
+      if (spawnTimer <= 0 && stock.length > 0) {
+        //画面上部でX座標がランダムな位置(左右の余白100px)に新規追加
+        words.push(new wordblock(stock.pop(), Math.floor(Math.random() * (canvasWidth - 200) + 100), 0));
+        spawnTimer = spawnInterval;   //出現タイマーをリセット
+
+        //単語の音声読み上げ
+        const utterance = new SpeechSynthesisUtterance();
+        utterance.text = words[words.length - 1].text.split("|")[0];
+        utterance.lang = 'en-US';
+        speechSynthesis.speak(utterance);
+      }
+
+      let i = 0;
+      //配列要素の削除でズレないように逆順でループ
+      for(i = words.length - 1; i >= 0; i--){
+        //文字列の上端が画面下に出たかチェック
+        if(words[i].baseline - words[i].fbba > canvasHeight){
+          //失敗リストに追加して削除
+          missList.value += (words[i].text + "\n");
+          words.splice(i, 1);
+        }else{
+          //落下移動（経過時間に合わせて移動させる：1秒間に40ピクセル）
+          words[i].baseline += 40 * deltaTime;          
+        }
+        //文字列の描画
+        ctx.fillText(words[i].quiz, words[i].left, words[i].baseline);
+      }
+      
+      //描画(プレイヤー)
+      ctx.fillStyle = "green";
+      ctx.fillRect(player.x - (player.width >> 1), player.y - (player.height >> 1),
+                   player.width, player.height);
+
+      //描画(弾丸)    
+      ctx.fillStyle = "yellow";
+      for(i = bullets.length - 1; i >= 0; i--){
+        //弾丸移動（経過時間に合わせて移動させる：1秒間に60ピクセル）  
+        bullets[i].baseline -= 60 * deltaTime;
+        ctx.fillText(bullets[i].text, bullets[i].left, bullets[i].baseline);
+
+        //弾丸と単語の当たり判定
+        let buf = isHit(words, bullets[i].left, bullets[i].left + bullets[i].width,
+                        bullets[i].baseline - bullets[i].fbba, bullets[i].baseline + bullets[i].fbbd);
+        if(buf.flag){
+          //正解判定
+          if(bullets[i].text == words[buf.index].ans){
+            //正解時の効果音を入れる
+
+            //正解リストに追加して削除
+            correctList.value += (words[buf.index].text + "\n");            
+            words.splice(buf.index, 1);
+          }else{
+            //不正解時の効果音を入れる
+
+          }
+          //接触した弾丸を消す
+          bullets.splice(i, 1);
+        }
+      }
+
+      //次のフレームを描画するタイミングで再度gameLoopを呼び出す
+      animationId = requestAnimationFrame(gameLoop);
+    }
+ 
+    //単語リストの当たり判定関数
+    function isHit(words, left, right, top, bottom){
+      let i;
+      let flag = false;
+
+      for(i = 0; i < words.length; i++){
+        if(words[i].baseline + words[i].fbbd > top &&
+           words[i].baseline - words[i].fbba < bottom &&
+           words[i].left < left &&
+           words[i].left + words[i].width > right){
+            flag = true;
+            break;            
+        }
+      }
+      return {flag: flag, index: i};
+    }
+
+    //プレイヤーをマウスで横移動
+    canvas1.addEventListener("mousemove", function (e) {
+      if (isGameOver) return;
+      const rect = e.target.getBoundingClientRect();
+      player.x = e.clientX - rect.left;
+    });
+
+    //キーボードでアルファベットの弾丸を発射
+    window.addEventListener('keydown', function (e) {
+      if (isGameOver) return;
+
+      //テキストエリア（textarea）にフォーカスがある時は、ゲームのキー入力を無視する
+      if (document.activeElement.tagName === "TEXTAREA") { return; }
+      const key = e.key;  //押されたキーの文字を取得
+
+      //1文字のアルファベット（半角の a-z または A-Z）のみを判定する正規表現
+      if (/^[a-zA-Z]$/.test(key)) {
+        bullets.push(new wordblock(key.toLowerCase(), player.x, player.y - (player.height >> 1)));
+
+        //発射時の効果音を入れる
+      }
+    });
+
+    //ゲーム中断
+    function stop(){
+      cancelAnimationFrame(animationId); //アニメーションをキャンセル
+      isGameOver = true;
+    }
+
+    //ゲーム再開
+    function start(){
+      if (!isGameOver) return; //すでに動いている場合は何もしない
+      isGameOver = false;
+      lastTime = performance.now(); //再開した時点の時間をセットして時間のズレを防ぐ
+      animationId = requestAnimationFrame(gameLoop);
+    }
+
+    //英単語リストを表示して正解を検索できる
+    function disp(){
+      const wordlist = document.getElementById("wordlist");
+      if(wordlist.style.display == "none"){
+        wordlist.style.display = "block";
+        wordlist.style.margin = "0 auto";
+      }else{
+        wordlist.style.display = "none";
+      }      
+    }
+
+    //英単語リストからランダムでcountの数だけ抽出
+    function getWords(count){
+      const wordlist = document.getElementById("wordlist");
+      const data = wordlist.value.split("\n");
+      const len = data.length;
+      let i = 0;
+      let j = 0;
+      // let k = 0;
+      let tmp = "";
+      // let buf = [];
+
+      //シャッフルした単語リストを作成
+      for(i = len - 1; i >= len - count; i--){
+        j = Math.floor(Math.random() * (i + 1));
+        tmp = data[i];
+        data[i] = data[j];
+        data[j] = tmp;
+      }
+      return data.slice(-count);
+    }
+  </script>
+</body>
+</html>
